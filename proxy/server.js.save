@@ -1,0 +1,87 @@
+const express = require('express');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const path = require('path')
+const app = express();
+const https = require('https');
+const fs = require('fs');
+const dotenv = require("dotenv")
+dotenv.config()
+
+/*const options = {
+	key : fs.readFileSync(`${process.env.KEY}`),
+        cert : fs.readFileSync(`${process.env.CERT}`)
+};
+
+app.use(bodyParser.json());
+
+app.use(cors());
+
+const keycloak = require('/opt/proxy/keycloak-config.js').initKeycloak();
+app.use(keycloak.middleware());
+
+
+// API
+const meetups = require('./api/meetupn');
+app.use('/api/meetupn', meetups);
+
+const users=require('./api/user');
+app.use('/api/user',users);
+
+app.use(express.static(path.join(__dirname, '../build')))
+
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../build'))
+})
+
+
+const port = process.env.PORT;
+
+var httpsServer = https.createServer(options, app);
+httpsServer.listen(port);
+*/
+
+
+
+var keycloakConfig = {
+
+    realm: 'logrocket',
+    bearerOnly: true,
+    serverUrl: 'https://34.200.175.161:8443/auth/',
+    clientId: 'nodejs-microservice',
+   realmPublicKey: 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAgEMf8NAqS5W3slTY2+UzKNrOv1ZvCiHNeZn5Rb9XR3YIxSKay8NU4FRyEts1dDARc442NaYFFMLM5FAGa2I71Gh3gi5Abx4p6Ly78fKjIvpvjZSoymR3tVsUF1DkELA3EHtINzWnzP/avQfl4tx7a87s9T2XKlRoWCn7TlDGLnW9BDj8qckn7G1BZ6ndtUxfEn9OIh2m6LinSrWT7jEE8UAvDU+SFbqXlQqa7iP4Z2XF5U+06QPpBb/vTmO98ywGJt2qZkgkGpZVFgteUgU3UDYtJ9acfi5ZTtFA6vP7C6q56Wspbtwwq0b9AbJMAR7ipoLMv8kNbUM47wj/rmBYSQIDAQAB'
+  
+  };
+
+const options = {
+	key : fs.readFileSync(`${process.env.KEY}`),
+        cert : fs.readFileSync(`${process.env.CERT}`)
+};
+
+app.use(cors()).use(bodyParser.json()).use(bodyParser.urlencoded({extended : true}));
+var memoryStore = new session.MemoryStore();
+app.use(session({
+    store: memoryStore,
+    secret : '463a0209-7241-4f98-94a4-b581a1a07c7a', 
+    resave : false , 
+    saveUninitialized : true
+}));
+var keycloak = new Keycloak({
+    store : memoryStore,    
+},keycloakConfig);
+app.use(keycloak.middleware({ 
+    logout: '/logout',
+    admin: '/'
+}));
+const meetups = require('./api/meetupn');
+app.use('/api/meetupn', meetups);
+const users=require('./api/user');
+const { Session } = require('inspector');
+const { default: keycloak } = require('../meetups_modifiche/src/keycloak');
+app.use('/api/user',users);
+app.use(express.static(path.join(__dirname, '../build')))
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../build'))
+});
+var httpsServer = https.createServer(options, app);
+httpsServer.listen(3001);
